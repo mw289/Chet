@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth/context"
+import { useI18n } from "@/lib/i18n/context"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -28,6 +30,7 @@ export default function LoginPage() {
 
   const router = useRouter()
   const { signIn, signUp, user } = useAuth()
+  const { t, language } = useI18n()
 
   // Redirect if already logged in
   if (user) {
@@ -90,32 +93,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#A796CB]/10 via-blue-50 to-[#7962A6]/10 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-              🧠
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Intelligent Physics
-            </span>
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">{isLogin ? "Welcome Back" : "Create Account"}</h1>
-          <p className="text-gray-600">
-            {isLogin ? "Sign in to access your physics simulations" : "Join thousands creating intelligent simulations"}
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/" className="inline-flex items-center gap-3 group">
+              <span className="text-2xl font-bold bg-gradient-to-r from-[#7962A6] to-[#A796CB] bg-clip-text text-transparent">
+                {t("app.title")}
+              </span>
+            </Link>
+            <LanguageSwitcher />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
+          </h1>
+          <p className="text-gray-600">{isLogin ? t("auth.signInDescription") : t("auth.signUpDescription")}</p>
         </div>
 
         {/* Login/Signup Card */}
         <Card className="shadow-2xl border-0">
           <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl text-center">{isLogin ? "Sign In" : "Sign Up"}</CardTitle>
+            <CardTitle className="text-2xl text-center">{isLogin ? t("auth.signIn") : t("auth.signUp")}</CardTitle>
             <CardDescription className="text-center">
-              {isLogin
-                ? "Enter your credentials to access the AI physics engine"
-                : "Create your account to start generating simulations"}
+              {isLogin ? t("auth.enterCredentials") : t("auth.createAccountDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -139,12 +140,12 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">{t("auth.fullName")}</Label>
                   <Input
                     id="fullName"
                     name="fullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t("auth.enterFullName")}
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required={!isLogin}
@@ -154,14 +155,14 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t("auth.enterEmail")}
                     value={formData.email}
                     onChange={handleInputChange}
                     required
@@ -171,14 +172,14 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t("auth.enterPassword")}
                     value={formData.password}
                     onChange={handleInputChange}
                     required
@@ -196,14 +197,14 @@ export default function LoginPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Input
                       id="confirmPassword"
                       name="confirmPassword"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
+                      placeholder={t("auth.confirmPasswordPlaceholder")}
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       required={!isLogin}
@@ -218,29 +219,29 @@ export default function LoginPage() {
                   <div className="flex items-center space-x-2">
                     <input type="checkbox" id="remember" className="rounded" />
                     <Label htmlFor="remember" className="text-sm text-gray-600">
-                      Remember me
+                      {t("auth.rememberMe")}
                     </Label>
                   </div>
-                  <Link href="#" className="text-sm text-purple-600 hover:text-purple-700">
-                    Forgot password?
+                  <Link href="#" className="text-sm text-[#7962A6] hover:text-[#6B5595]">
+                    {t("auth.forgotPassword")}
                   </Link>
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 hover:from-purple-600 hover:via-blue-600 hover:to-indigo-600"
+                className="w-full h-12 text-base bg-gradient-to-r from-[#7962A6] to-[#A796CB] hover:from-[#6B5595] hover:to-[#9B89BA]"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    {isLogin ? "Signing In..." : "Creating Account..."}
+                    {isLogin ? t("auth.signingIn") : t("auth.creatingAccount")}
                   </>
                 ) : (
                   <>
                     <Brain className="mr-2 h-5 w-5" />
-                    {isLogin ? "Sign In" : "Create Account"}
+                    {isLogin ? t("auth.signIn") : t("auth.createAccount")}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </>
                 )}
@@ -250,7 +251,7 @@ export default function LoginPage() {
             {/* Switch Mode */}
             <div className="text-center">
               <p className="text-gray-600">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                {isLogin ? t("auth.dontHaveAccount") : t("auth.alreadyHaveAccount")}
                 <button
                   onClick={() => {
                     setIsLogin(!isLogin)
@@ -263,10 +264,10 @@ export default function LoginPage() {
                       fullName: "",
                     })
                   }}
-                  className="ml-2 text-purple-600 hover:text-purple-700 font-medium"
+                  className="ml-2 text-[#7962A6] hover:text-[#6B5595] font-medium"
                   disabled={isLoading}
                 >
-                  {isLogin ? "Sign up" : "Sign in"}
+                  {isLogin ? t("auth.signUp") : t("auth.signIn")}
                 </button>
               </p>
             </div>
@@ -275,13 +276,23 @@ export default function LoginPage() {
 
         {/* Features Preview */}
         <div className="mt-8 text-center">
-          <p className="text-gray-500 mb-4">What you'll get access to:</p>
+          <p className="text-gray-500 mb-4">{t("auth.accessFeatures")}</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["AI Physics Engine", "Real-time Simulations", "Smart Controls", "Vector Visualization"].map((feature) => (
-              <span key={feature} className="px-3 py-1 bg-white rounded-full text-sm text-gray-600 shadow-sm">
-                {feature}
-              </span>
-            ))}
+            {(() => {
+              const getFeaturesPreviews = () => {
+                const featuresMap: Record<string, string[]> = {
+                  en: ["AI Physics Engine", "Real-time Simulations", "Smart Controls", "Vector Visualization"],
+                  id: ["Mesin Fisika AI", "Simulasi Real-time", "Kontrol Cerdas", "Visualisasi Vektor"],
+                }
+                return featuresMap[language] || featuresMap.en
+              }
+
+              return getFeaturesPreviews().map((feature: string) => (
+                <span key={feature} className="px-3 py-1 bg-white rounded-full text-sm text-gray-600 shadow-sm">
+                  {feature}
+                </span>
+              ))
+            })()}
           </div>
         </div>
       </div>
