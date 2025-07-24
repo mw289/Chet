@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,12 +8,50 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Brain, Zap, Target, BookOpen, Play, LogOut, User } from "lucide-react"
 import { SimulationSandbox } from "@/components/simulation-sandbox"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth/context"
+import { useProfile } from "@/lib/hooks/use-profile"
 
 export default function SimulationGenerator() {
   const [userInput, setUserInput] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const router = useRouter()
+  const { user, loading: authLoading, signOut } = useAuth()
+  const { profile, loading: profileLoading } = useProfile()
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, authLoading, router])
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/")
+  }
+
+  // Show loading while checking auth
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-3xl flex items-center justify-center text-2xl mb-4 animate-pulse">
+            🧠
+          </div>
+          <p className="text-gray-600">Loading your physics workspace...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null
+  }
 
   const generateSimulation = async () => {
     if (!userInput.trim()) return
@@ -111,14 +149,12 @@ export default function SimulationGenerator() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-gray-600">
                 <User className="h-5 w-5" />
-                <span>Welcome back!</span>
+                <span>Welcome, {profile?.full_name || user.email}!</span>
               </div>
-              <Link href="/login">
-                <Button variant="outline" size="sm">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

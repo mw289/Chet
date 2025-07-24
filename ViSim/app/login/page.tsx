@@ -7,32 +7,79 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Brain, Mail, Lock, ArrowRight, Github, Chrome, Eye, EyeOff } from "lucide-react"
+import { Brain, Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth/context"
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
-    name: "",
+    fullName: "",
   })
+
   const router = useRouter()
+  const { signIn, signUp, user } = useAuth()
+
+  // Redirect if already logged in
+  if (user) {
+    router.push("/app")
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
+    setSuccess(null)
 
-    // Simulate authentication
-    setTimeout(() => {
+    try {
+      if (isLogin) {
+        // Sign in
+        const { error } = await signIn(formData.email, formData.password)
+        if (error) {
+          setError(error.message)
+        } else {
+          router.push("/app")
+        }
+      } else {
+        // Sign up
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match")
+          return
+        }
+
+        if (formData.password.length < 6) {
+          setError("Password must be at least 6 characters long")
+          return
+        }
+
+        const { error } = await signUp(formData.email, formData.password, formData.fullName)
+        if (error) {
+          setError(error.message)
+        } else {
+          setSuccess("Account created successfully! Please check your email to verify your account.")
+          setFormData({
+            email: "",
+            password: "",
+            confirmPassword: "",
+            fullName: "",
+          })
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred")
+    } finally {
       setIsLoading(false)
-      router.push("/app")
-    }, 1500)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,38 +119,33 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Social Login */}
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full h-12 text-base bg-transparent" disabled={isLoading}>
-                <Chrome className="mr-2 h-5 w-5" />
-                Continue with Google
-              </Button>
-              <Button variant="outline" className="w-full h-12 text-base bg-transparent" disabled={isLoading}>
-                <Github className="mr-2 h-5 w-5" />
-                Continue with GitHub
-              </Button>
-            </div>
+            {/* Error Alert */}
+            {error && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
+              </Alert>
+            )}
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or continue with email</span>
-              </div>
-            </div>
+            {/* Success Alert */}
+            {success && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-600">{success}</AlertDescription>
+              </Alert>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
-                    id="name"
-                    name="name"
+                    id="fullName"
+                    name="fullName"
                     type="text"
                     placeholder="Enter your full name"
-                    value={formData.name}
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     required={!isLogin}
                     className="h-12"
@@ -210,7 +252,17 @@ export default function LoginPage() {
               <p className="text-gray-600">
                 {isLogin ? "Don't have an account?" : "Already have an account?"}
                 <button
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin)
+                    setError(null)
+                    setSuccess(null)
+                    setFormData({
+                      email: "",
+                      password: "",
+                      confirmPassword: "",
+                      fullName: "",
+                    })
+                  }}
                   className="ml-2 text-purple-600 hover:text-purple-700 font-medium"
                   disabled={isLoading}
                 >

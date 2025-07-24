@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
+import { AuthProvider } from "@/lib/auth/context"
 import "./globals.css"
 
 const fontSans = Inter({
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }
