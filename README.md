@@ -6,55 +6,6 @@ Education should be a space where every student thrives, not just those who fit 
 
 ViSim aims to reshape the world of education, empowering both visual and kinesthetic learners that have been ostracized from the traditional reading/writing learners. With the usage of gpt-4o API, ViSim serves as an automatic physics experiment simulation generator. Students can simply type in a short sentence regarding a concept or experiment and…BAAM! Within a few moments, ViSim will generate a fully dynamic and interactive simulation using agents. This simulation engages the learner with both sliders and/or toggles with a visual display that changes results in response to the variables. The user can then save this generated simulation locally on his/her computer, or save it to the library feature in ViSim which allows them to revisit their generated simulations, anytime they need it.
 
-##  &nbsp;How we built it
-
-We used v0.dev to AI generate some code
-
-Frontend
-
-Our Frontend was designed with simplicity in mind, for users to immediately start learning once they boot it up.
-
-Framework:
-
-Next.js
-
-Language:
-
-TypeScript
-
-UI/Styling:
-
-Radix UI Tailwind CSS
-
-Build Tools:
-
-PostCSS Tailwind Autoprefixer
-
-Backend
-
-Our backend was built with a modular agent pipeline, coordinated by an orchestrator, as its base.
-
-Agents
-
-Orchestrator (Generates complete, accurate HTML physics simulations based on user input, focusing on structure, style and interactivity)
-
-Code Generator Agent (A JavaScript simulation expert specializing in p5.js and matter.js. This agent generates clean, beginner-friendly simulation code based on a prompt, UI controls, and educational explanations. It is required to integrate all controls and explanations, use proper structure, and output only runnable JavaScript code.)
-
-UI Generator Agent (Generates p5.js UI controls for physics simulations. Given key variables, simulation goals, and user level, it creates a schema of UI controls (sliders, buttons, checkboxes), setup code, and draw code. The agent ensures controls are appropriate for the user’s level and simulation context.)
-
-Explainer Agent (An educational physics simulation expert that analyzes p5.js code and generates overlays, tooltips, and annotations to explain key physics concepts, interactive elements, and real-time values.)
-
-Interpreter Agent (A code validator for educational JavaScript simulations. It checks, fixes, and validates p5.js code, ensuring proper structure, safety, and interactivity. It outputs either corrected code or a clear error message, focusing on making the code runnable and safe.)
-
-Sandbox Optimizer Agent (Optimizes simulation code for real-time preview in a web sandbox. It ensures the code is performant, visually clear, interactive, and robust against errors. The agent adds educational enhancements, keyboard shortcuts, and real-time value displays, outputting optimized code and an HTML wrapper.)
-
-Authentication & Database:
-
-Supabase (@supabase/supabase-js, @supabase/ssr) Supabase Auth (user management, RLS, etc.)
-
-AI Integration:
-
-OpenAI (gpt-4o) via @ai-sdk/openai and ai
 
 ##  &nbsp;Challenges we ran into
 
