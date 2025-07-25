@@ -48,3 +48,9 @@ With its strong foundation, ViSim is set to evolve further—bringing even more 
    ```bash
    $ npm run dev
    ```
+
+
+
+
+   Note: We used v0 to generate some code for us
+
