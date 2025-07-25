@@ -90,5 +90,5 @@ With its strong foundation, ViSim is set to evolve further—bringing even more 
 
 
 
-   Note: We used v0 to generate some code for us
+   Note: v0 was used to generate some code for us
 
