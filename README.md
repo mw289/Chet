@@ -7,7 +7,6 @@ Education should be a space where every student thrives, not just those who fit 
 ViSim aims to reshape the world of education, empowering both visual and kinesthetic learners that have been ostracized from the traditional reading/writing learners. With the usage of gpt-4o API, ViSim serves as an automatic physics experiment simulation generator. Students can simply type in a short sentence regarding a concept or experiment and…BAAM! Within a few moments, ViSim will generate a fully dynamic and interactive simulation using agents. This simulation engages the learner with both sliders and/or toggles with a visual display that changes results in response to the variables. The user can then save this generated simulation locally on his/her computer, or save it to the library feature in ViSim which allows them to revisit their generated simulations, anytime they need it.
 
 #  &nbsp;How we built it
-We used v0.dev to AI generate some code
 
 ##  &nbsp;Frontend
 Our Frontend was designed with simplicity in mind, for users to immediately start learning once they boot it up.
@@ -19,10 +18,10 @@ Next.js
 TypeScript
 
 ###  &nbsp;UI/Styling:
-Radix UI Tailwind CSS
+Radix UI, Tailwind, CSS
 
 ###  &nbsp;Build Tools:
-PostCSS Tailwind Autoprefixer
+PostCSS, Tailwind, Autoprefixer
 
 ##  &nbsp;Backend
 Our backend was built with a modular agent pipeline, coordinated by an orchestrator, as its base.
