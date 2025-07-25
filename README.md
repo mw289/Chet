@@ -39,10 +39,10 @@ Interpreter Agent (A code validator for educational JavaScript simulations. It c
 
 Sandbox Optimizer Agent (Optimizes simulation code for real-time preview in a web sandbox. It ensures the code is performant, visually clear, interactive, and robust against errors. The agent adds educational enhancements, keyboard shortcuts, and real-time value displays, outputting optimized code and an HTML wrapper.)
 
-###  &nbspAuthentication & Database:
+###  &nbsp;Authentication & Database:
 Supabase (@supabase/supabase-js, @supabase/ssr) Supabase Auth (user management, RLS, etc.)
 
-###  &nbspAI Integration:
+###  &nbsp;AI Integration:
 OpenAI (gpt-4o) via @ai-sdk/openai and ai
 
 #  &nbsp;Challenges we ran into
