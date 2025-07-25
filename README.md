@@ -2,11 +2,11 @@
 
 Education should be a space where every student thrives, not just those who fit the traditional mold. Yet, many educational institutions still design their resources and environments around reading/writing learning styles, unintentionally sidelining visual and kinesthetic learners. We believe that the playing field should be equal, in support of UN SDG 4&10, for all members of society, and that’s where ViSim comes in.
 
-What it does
+##  &nbsp;What it does
 
 ViSim aims to reshape the world of education, empowering both visual and kinesthetic learners that have been ostracized from the traditional reading/writing learners. With the usage of gpt-4o API, ViSim serves as an automatic physics experiment simulation generator. Students can simply type in a short sentence regarding a concept or experiment and…BAAM! Within a few moments, ViSim will generate a fully dynamic and interactive simulation using agents. This simulation engages the learner with both sliders and/or toggles with a visual display that changes results in response to the variables. The user can then save this generated simulation locally on his/her computer, or save it to the library feature in ViSim which allows them to revisit their generated simulations, anytime they need it.
 
-How we built it
+##  &nbsp;How we built it
 
 We used v0.dev to AI generate some code
 
@@ -56,7 +56,7 @@ AI Integration:
 
 OpenAI (gpt-4o) via @ai-sdk/openai and ai
 
-Challenges we ran into
+##  &nbsp;Challenges we ran into
 
 As first-time participants, our lack of experience really showed in certain times, but the adventure was extremely thrilling. The following are some of our challenges as a team:
 
@@ -72,15 +72,15 @@ Technical Roadblocks
 
 Many of us experienced various dependency errors. Despite downloading all of the dependencies needed, we still could not run the code. This was extremely mentally frustrating especially during the crux of time. Additionally, the agents’ output was honestly not up to our expectations, which required a lot of effort in order to successfully deploy our idea. Nonetheless, we persevered and managed, modifying our code to accommodate these issues, or even just simply fixing these persistent issues.
 
-Accomplishments that we're proud of
+##  &nbsp;Accomplishments that we're proud of
 
 We're proud that we managed to challenge ourselves technically by creating this modular agent pipeline with an orchestrator, incorporating AI into it, and even fine tuning it. We believe that our success is a display of our growth over the past 30 hours.
 
-What we learned
+##  &nbsp;What we learned
 
 Throughout the development of ViSim, we stumbled upon multiple lessons that will prove to be essential in the coming future. On the technical side of things, we learnt how to orchestrate the pipeline powered by multiple agents, which proved to be a technical challenge, delving into integrating the gpt-4o API. This whole project showcases the incredible limits of AI that we may never reach. Speaking non-technically, we experienced the importance of adaptability and responsiveness first hand, each taking up our own responsibilities and helping wherever we can. Additionally, the importance of time management became clear to us, especially with our lack of experience. This really highlighted how essential communication and chemistry between team members is in a time-pressured environment.
 
-What's next for ViSim
+##  &nbsp;What's next for ViSim
 
 With its strong foundation, ViSim is set to evolve further—bringing even more innovative features to empower students here in Indonesia. We plan to not only integrate a stronger API model to enhance code generation, but we also plan to plunge into even more complex concepts that even standard books have trouble explaining. In addition, we plan to also incorporate more subjects that require strong visualization such as Chemistry, Math and Biology. This way, Indonesian students can freely visualize any subject and any topic, anytime they want. Furthermore, we also plan to integrate ViSim into different schools and foundations here in Indonesia, allowing teachers to also implement ViSim into their classrooms, skyrocketing student engagement and lesson retention. By further optimizing ViSim, we are able to skyrocket user engagement and satisfaction, allowing all learners in Indonesia to visualize educational concepts without difficulty.
 
