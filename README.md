@@ -11,15 +11,15 @@ ViSim aims to reshape the world of education, empowering both visual and kinesth
 
 As first-time participants, our lack of experience really showed in certain times, but the adventure was extremely thrilling. The following are some of our challenges as a team:
 
-Brainstorming
+# Brainstorming
 
 When we first received the tracks, we found it challenging to not only think of relevant, inspiring ideas, but also to decide on which track to follow. As a result, we spent a crucial 3 hours researching data and statistics, brainstorming possible ideas. Although it was mentally draining, we kept on pushing, and finally…we came up with ViSim.
 
-Scheduling Conflicts
+# Scheduling Conflicts
 
 One of our team members had an urgent situation, resulting in her physical absence for the first 2 days. We had to figure out a way for her to work remotely while we work in person. We ended up splitting the app into smaller tasks for us to all work on then integrate into the main website. We also held meetings every night in order to help each other with issues and figure out problems.
 
-Technical Roadblocks
+# Technical Roadblocks
 
 Many of us experienced various dependency errors. Despite downloading all of the dependencies needed, we still could not run the code. This was extremely mentally frustrating especially during the crux of time. Additionally, the agents’ output was honestly not up to our expectations, which required a lot of effort in order to successfully deploy our idea. Nonetheless, we persevered and managed, modifying our code to accommodate these issues, or even just simply fixing these persistent issues.
 
