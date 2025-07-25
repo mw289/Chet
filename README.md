@@ -1,4 +1,4 @@
-Inspiration
+###Inspiration
 Education should be a space where every student thrives, not just those who fit the traditional mold. Yet, many educational institutions still design their resources and environments around reading/writing learning styles, unintentionally sidelining visual and kinesthetic learners. We believe that the playing field should be equal, in support of UN SDG 4&10, for all members of society, and that’s where ViSim comes in.
 
 What it does
