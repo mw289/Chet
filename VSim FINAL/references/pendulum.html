@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Interactive Pendulum Simulation</title>
+  <style>
+      body { 
+          margin: 0; 
+          padding: 20px; 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          background: #f8f9fa; 
+          color: #333;
+      }
+      .container {
+          max-width: 1400px;
+          margin: 0 auto;
+      }
+      h1 {
+          font-size: 28px;
+          font-weight: 600;
+          margin-bottom: 30px;
+          color: #2c3e50;
+      }
+      .simulation-area {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+          padding: 30px;
+          margin-bottom: 30px;
+      }
+      canvas { 
+          border: 2px solid #e1e8ed;
+          background: #f8f9fa;
+          display: block; 
+          margin: 20px auto;
+          border-radius: 8px;
+          max-width: 100%;
+          height: auto;
+      }
+      .controls-panel {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+          padding: 30px;
+      }
+      .controls-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 25px;
+      }
+      .control-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
+      .control-label {
+          font-weight: 600;
+          color: #2c3e50;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+      .slider-container {
+          position: relative;
+          height: 40px;
+          display: flex;
+          align-items: center;
+      }
+      .slider {
+          width: 100%;
+          height: 6px;
+          border-radius: 3px;
+          background: #e1e8ed;
+          outline: none;
+          -webkit-appearance: none;
+          appearance: none;
+      }
+      .slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #e74c3c;
+          cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      }
+      .slider::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #e74c3c;
+          cursor: pointer;
+          border: none;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      }
+      .button-group {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+      .control-button {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 6px;
+          background: #3498db;
+          color: white;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+      }
+      .control-button:hover {
+          background: #2980b9;
+      }
+      .control-button.active {
+          background: #e74c3c;
+      }
+      .value-display {
+          position: absolute;
+          right: -80px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: #34495e;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          min-width: 60px;
+          text-align: center;
+      }
+      @media (max-width: 768px) {
+          .controls-grid { grid-template-columns: 1fr; }
+          .value-display { position: static; margin-top: 5px; }
+      }
+  </style>
+</head>
+<body>
+  <div class="container">
+      <h1>Interactive Pendulum Simulation</h1>
+      
+      <div class="simulation-area">
+          <canvas id="canvas" width="800" height="600"></canvas>
+      </div>
+      
+      <div class="controls-panel">
+          <div class="controls-grid">
+              <div class="control-group">
+                  <label class="control-label">
+                      Length = <span id="lengthValue">2.0</span> m
+                  </label>
+                  <div class="slider-container">
+                      <input type="range" id="length" class="slider" min="0.5" max="5.0" value="2.0" step="0.1">
+                  </div>
+              </div>
+              
+              <div class="control-group">
+                  <label class="control-label">
+                      Mass = <span id="massValue">1.0</span> kg
+                  </label>
+                  <div class="slider-container">
+                      <input type="range" id="mass" class="slider" min="0.1" max="5.0" value="1.0" step="0.1">
+                  </div>
+              </div>
+              
+              <div class="control-group">
+                  <label class="control-label">
+                      Initial Angle = <span id="angleValue">30</span>°
+                  </label>
+                  <div class="slider-container">
+                      <input type="range" id="angle" class="slider" min="5" max="85" value="30" step="1">
+                  </div>
+              </div>
+              
+              <div class="control-group">
+                  <label class="control-label">
+                      Damping = <span id="dampingValue">0.02</span>
+                  </label>
+                  <div class="slider-container">
+                      <input type="range" id="damping" class="slider" min="0" max="0.1" value="0.02" step="0.005">
+                  </div>
+              </div>
+              
+              <div class="control-group">
+                  <label class="control-label">Controls</label>
+                  <div class="button-group">
+                      <button class="control-button" id="startBtn">Start</button>
+                      <button class="control-button" id="pauseBtn">Pause</button>
+                      <button class="control-button" id="resetBtn">Reset</button>
+                      <button class="control-button" id="trailBtn">Toggle Trail</button>
+                  </div>
+              </div>
+              
+              <div class="control-group">
+                  <label class="control-label">Display Options</label>
+                  <div class="button-group">
+                      <button class="control-button" id="energyBtn">Show Energy</button>
+                      <button class="control-button" id="vectorsBtn">Show Vectors</button>
+                      <button class="control-button" id="graphBtn">Show Graph</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      let length = 2.0;
+      let mass = 1.0;
+      let angle = Math.PI / 6; // 30 degrees
+      let angularVelocity = 0;
+      let damping = 0.02;
+      let gravity = 9.81;
+      
+      let isRunning = false;
+      let showTrail = false;
+      let showEnergy = false;
+      let showVectors = false;
+      let showGraph = false;
+      
+      let trail = [];
+      let energyData = [];
+      let timeData = [];
+      let time = 0;
+      
+      const pivotX = canvas.width / 2;
+      const pivotY = 100;
+      const scale = 100; // pixels per meter
+      
+      function updateValues() {
+          length = parseFloat(document.getElementById('length').value);
+          mass = parseFloat(document.getElementById('mass').value);
+          damping = parseFloat(document.getElementById('damping').value);
+          
+          if (!isRunning) {
+              angle = parseFloat(document.getElementById('angle').value) * Math.PI / 180;
+              angularVelocity = 0;
+          }
+          
+          document.getElementById('lengthValue').textContent = length.toFixed(1);
+          document.getElementById('massValue').textContent = mass.toFixed(1);
+          document.getElementById('angleValue').textContent = Math.round(angle * 180 / Math.PI);
+          document.getElementById('dampingValue').textContent = damping.toFixed(3);
+      }
+      
+      function drawPendulum() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Draw trail
+          if (showTrail && trail.length > 1) {
+              ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(trail[0].x, trail[0].y);
+              for (let i = 1; i < trail.length; i++) {
+                  ctx.lineTo(trail[i].x, trail[i].y);
+              }
+              ctx.stroke();
+          }
+          
+          // Calculate bob position
+          const bobX = pivotX + length * scale * Math.sin(angle);
+          const bobY = pivotY + length * scale * Math.cos(angle);
+          
+          // Draw string
+          ctx.strokeStyle = '#34495e';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(pivotX, pivotY);
+          ctx.lineTo(bobX, bobY);
+          ctx.stroke();
+          
+          // Draw pivot
+          ctx.fillStyle = '#2c3e50';
+          ctx.beginPath();
+          ctx.arc(pivotX, pivotY, 8, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Draw bob
+          const bobRadius = Math.max(10, Math.sqrt(mass) * 15);
+          ctx.fillStyle = '#e74c3c';
+          ctx.beginPath();
+          ctx.arc(bobX, bobY, bobRadius, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Draw vectors
+          if (showVectors) {
+              drawVectors(bobX, bobY);
+          }
+          
+          // Draw energy display
+          if (showEnergy) {
+              drawEnergyDisplay();
+          }
+          
+          // Draw graph
+          if (showGraph) {
+              drawGraph();
+          }
+          
+          // Add to trail
+          if (showTrail) {
+              trail.push({x: bobX, y: bobY});
+              if (trail.length > 200) {
+                  trail.shift();
+              }
+          }
+      }
+      
+      function drawVectors(bobX, bobY) {
+          const scale = 50;
+          
+          // Velocity vector
+          const vx = -angularVelocity * length * scale * Math.cos(angle);
+          const vy = -angularVelocity * length * scale * Math.sin(angle);
+          
+          ctx.strokeStyle = '#27ae60';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(bobX, bobY);
+          ctx.lineTo(bobX + vx, bobY + vy);
+          ctx.stroke();
+          
+          // Acceleration vector
+          const angularAccel = -(gravity / length) * Math.sin(angle) - damping * angularVelocity;
+          const ax = -angularAccel * length * scale * Math.cos(angle);
+          const ay = -angularAccel * length * scale * Math.sin(angle);
+          
+          ctx.strokeStyle = '#f39c12';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(bobX, bobY);
+          ctx.lineTo(bobX + ax, bobY + ay);
+          ctx.stroke();
+          
+          // Labels
+          ctx.fillStyle = '#27ae60';
+          ctx.font = '12px Arial';
+          ctx.fillText('Velocity', bobX + vx + 5, bobY + vy);
+          
+          ctx.fillStyle = '#f39c12';
+          ctx.fillText('Acceleration', bobX + ax + 5, bobY + ay);
+      }
+      
+      function drawEnergyDisplay() {
+          const kineticEnergy = 0.5 * mass * Math.pow(angularVelocity * length, 2);
+          const potentialEnergy = mass * gravity * length * (1 - Math.cos(angle));
+          const totalEnergy = kineticEnergy + potentialEnergy;
+          
+          ctx.fillStyle = '#2c3e50';
+          ctx.font = '14px Arial';
+          ctx.fillText(`Kinetic Energy: ${kineticEnergy.toFixed(2)} J`, 20, 30);
+          ctx.fillText(`Potential Energy: ${potentialEnergy.toFixed(2)} J`, 20, 50);
+          ctx.fillText(`Total Energy: ${totalEnergy.toFixed(2)} J`, 20, 70);
+          ctx.fillText(`Period: ${(2 * Math.PI * Math.sqrt(length / gravity)).toFixed(2)} s`, 20, 90);
+      }
+      
+      function drawGraph() {
+          const graphX = canvas.width - 250;
+          const graphY = 50;
+          const graphWidth = 200;
+          const graphHeight = 150;
+          
+          // Graph background
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+          ctx.strokeStyle = '#bdc3c7';
+          ctx.strokeRect(graphX, graphY, graphWidth, graphHeight);
+          
+          // Plot angle vs time
+          if (timeData.length > 1) {
+              ctx.strokeStyle = '#e74c3c';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              
+              for (let i = 0; i < timeData.length; i++) {
+                  const x = graphX + (i / timeData.length) * graphWidth;
+                  const y = graphY + graphHeight/2 - (energyData[i] / Math.PI) * graphHeight/2;
+                  
+                  if (i === 0) {
+                      ctx.moveTo(x, y);
+                  } else {
+                      ctx.lineTo(x, y);
+                  }
+              }
+              ctx.stroke();
+          }
+          
+          // Graph labels
+          ctx.fillStyle = '#2c3e50';
+          ctx.font = '12px Arial';
+          ctx.fillText('Angle vs Time', graphX + 5, graphY + 15);
+      }
+      
+      function updatePhysics() {
+          if (!isRunning) return;
+          
+          const dt = 0.016; // 60 FPS
+          const angularAcceleration = -(gravity / length) * Math.sin(angle) - damping * angularVelocity;
+          
+          angularVelocity += angularAcceleration * dt;
+          angle += angularVelocity * dt;
+          
+          time += dt;
+          
+          // Store data for graph
+          energyData.push(angle);
+          timeData.push(time);
+          if (energyData.length > 200) {
+              energyData.shift();
+              timeData.shift();
+          }
+      }
+      
+      function animate() {
+          updatePhysics();
+          drawPendulum();
+          requestAnimationFrame(animate);
+      }
+      
+      // Event listeners
+      document.getElementById('length').addEventListener('input', updateValues);
+      document.getElementById('mass').addEventListener('input', updateValues);
+      document.getElementById('angle').addEventListener('input', updateValues);
+      document.getElementById('damping').addEventListener('input', updateValues);
+      
+      document.getElementById('startBtn').addEventListener('click', () => {
+          isRunning = true;
+          document.getElementById('startBtn').classList.add('active');
+          document.getElementById('pauseBtn').classList.remove('active');
+      });
+      
+      document.getElementById('pauseBtn').addEventListener('click', () => {
+          isRunning = false;
+          document.getElementById('pauseBtn').classList.add('active');
+          document.getElementById('startBtn').classList.remove('active');
+      });
+      
+      document.getElementById('resetBtn').addEventListener('click', () => {
+          isRunning = false;
+          angle = parseFloat(document.getElementById('angle').value) * Math.PI / 180;
+          angularVelocity = 0;
+          time = 0;
+          trail = [];
+          energyData = [];
+          timeData = [];
+          document.getElementById('startBtn').classList.remove('active');
+          document.getElementById('pauseBtn').classList.remove('active');
+      });
+      
+      document.getElementById('trailBtn').addEventListener('click', () => {
+          showTrail = !showTrail;
+          if (!showTrail) trail = [];
+          document.getElementById('trailBtn').classList.toggle('active');
+      });
+      
+      document.getElementById('energyBtn').addEventListener('click', () => {
+          showEnergy = !showEnergy;
+          document.getElementById('energyBtn').classList.toggle('active');
+      });
+      
+      document.getElementById('vectorsBtn').addEventListener('click', () => {
+          showVectors = !showVectors;
+          document.getElementById('vectorsBtn').classList.toggle('active');
+      });
+      
+      document.getElementById('graphBtn').addEventListener('click', () => {
+          showGraph = !showGraph;
+          document.getElementById('graphBtn').classList.toggle('active');
+      });
+      
+      // Initialize
+      updateValues();
+      animate();
+  </script>
+</body>
+</html>

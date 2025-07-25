@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Collision Simulation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: #f8f9fa;
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .control-button:hover {
+            background: #2980b9;
+        }
+        .control-button.active {
+            background: #e74c3c;
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Collision Simulation</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Mass 1 = <span id="mass1Value">2.0</span> kg
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="mass1" class="slider" min="0.5" max="10.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Mass 2 = <span id="mass2Value">2.0</span> kg
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="mass2" class="slider" min="0.5" max="10.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Velocity 1 = <span id="vel1Value">5.0</span> m/s
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="vel1" class="slider" min="-10" max="10" value="5" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Velocity 2 = <span id="vel2Value">0.0</span> m/s
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="vel2" class="slider" min="-10" max="10" value="0" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Coefficient of Restitution = <span id="corValue">1.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="cor" class="slider" min="0" max="1" value="1" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Controls</label>
+                    <div class="button-group">
+                        <button class="control-button" id="startBtn">Start</button>
+                        <button class="control-button" id="pauseBtn">Pause</button>
+                        <button class="control-button" id="resetBtn">Reset</button>
+                        <button class="control-button" id="trailBtn">Toggle Trail</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let mass1 = 2.0;
+        let mass2 = 2.0;
+        let initialVel1 = 5.0;
+        let initialVel2 = 0.0;
+        let cor = 1.0; // coefficient of restitution
+        
+        let ball1 = {
+            x: 150,
+            y: canvas.height / 2,
+            vx: 5.0,
+            radius: 30,
+            color: '#e74c3c'
+        };
+        
+        let ball2 = {
+            x: 650,
+            y: canvas.height / 2,
+            vx: 0.0,
+            radius: 30,
+            color: '#3498db'
+        };
+        
+        let isRunning = false;
+        let showTrail = false;
+        let hasCollided = false;
+        let trail1 = [];
+        let trail2 = [];
+        
+        function updateValues() {
+            mass1 = parseFloat(document.getElementById('mass1').value);
+            mass2 = parseFloat(document.getElementById('mass2').value);
+            initialVel1 = parseFloat(document.getElementById('vel1').value);
+            initialVel2 = parseFloat(document.getElementById('vel2').value);
+            cor = parseFloat(document.getElementById('cor').value);
+            
+            // Update ball sizes based on mass
+            ball1.radius = Math.max(15, Math.sqrt(mass1) * 10);
+            ball2.radius = Math.max(15, Math.sqrt(mass2) * 10);
+            
+            if (!isRunning) {
+                ball1.vx = initialVel1;
+                ball2.vx = initialVel2;
+            }
+            
+            document.getElementById('mass1Value').textContent = mass1.toFixed(1);
+            document.getElementById('mass2Value').textContent = mass2.toFixed(1);
+            document.getElementById('vel1Value').textContent = initialVel1.toFixed(1);
+            document.getElementById('vel2Value').textContent = initialVel2.toFixed(1);
+            document.getElementById('corValue').textContent = cor.toFixed(1);
+        }
+        
+        function resetSimulation() {
+            ball1.x = 150;
+            ball1.y = canvas.height / 2;
+            ball1.vx = initialVel1;
+            
+            ball2.x = 650;
+            ball2.y = canvas.height / 2;
+            ball2.vx = initialVel2;
+            
+            hasCollided = false;
+            trail1 = [];
+            trail2 = [];
+        }
+        
+        function checkCollision() {
+            const dx = ball2.x - ball1.x;
+            const dy = ball2.y - ball1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const minDistance = ball1.radius + ball2.radius;
+            
+            if (distance < minDistance && !hasCollided) {
+                hasCollided = true;
+                
+                // Calculate collision response
+                const v1i = ball1.vx;
+                const v2i = ball2.vx;

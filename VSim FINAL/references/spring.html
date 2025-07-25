@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Physics Simulation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #ffffff;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #111827;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .controls {
+            background: #f9fafb;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .control-group {
+            display: inline-block;
+            margin: 12px 16px 12px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            width: 160px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        canvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .physics-info {
+            background: #f9fafb;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 24px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .physics-info h3 {
+            margin-top: 0;
+            color: #111827;
+            font-weight: 600;
+        }
+        .equation {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 6px 8px 6px 0;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #liveData {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-top: 16px;
+        }
+        #liveData p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spring Physics Simulation</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="springConstant">Spring Constant (k): <span id="kValue">50</span> N/m</label>
+                <input type="range" id="springConstant" min="10" max="200" value="50">
+            </div>
+            <div class="control-group">
+                <label for="mass">Mass (m): <span id="massValue">1.0</span> kg</label>
+                <input type="range" id="mass" min="0.5" max="5" step="0.1" value="1.0">
+            </div>
+            
+            <div class="control-group">
+                <button onclick="resetSimulation()">Reset</button>
+                <button onclick="togglePause()">Pause/Resume</button>
+            </div>
+        </div>
+        
+        <canvas id="simulationCanvas" width="800" height="400"></canvas>
+        
+        <div class="physics-info">
+            <h3>Physics Concepts</h3>
+            
+            <div class="equation">
+                <strong>Hooke's Law:</strong> F = -kx<br>
+                Where F is force, k is spring constant, x is displacement
+            </div>
+            
+            <div id="liveData">
+                <p><strong>Current Values:</strong></p>
+                <p>Position: <span id="position">0</span> m</p>
+                <p>Velocity: <span id="velocity">0</span> m/s</p>
+                <p>Force: <span id="force">0</span> N</p>
+                <p>Energy: <span id="energy">0</span> J</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Simulation variables
+        let springConstant = 50;
+        let mass = 1.0;
+        let position = 0;
+        let velocity = 0;
+        let time = 0;
+        let isPaused = false;
+        
+        // Visual constants
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const springRestLength = 100;
+        const massSize = 30;
+        
+        // Control event listeners
+        document.getElementById('springConstant').addEventListener('input', (e) => {
+            springConstant = parseFloat(e.target.value);
+            document.getElementById('kValue').textContent = springConstant;
+        });
+        
+        document.getElementById('mass').addEventListener('input', (e) => {
+            mass = parseFloat(e.target.value);
+            document.getElementById('massValue').textContent = mass;
+        });
+        
+        function resetSimulation() {
+            position = 50; // Initial displacement
+            velocity = 0;
+            time = 0;
+        }
+        
+        function togglePause() {
+            isPaused = !isPaused;
+        }
+        
+        function updatePhysics(dt) {
+            if (isPaused) return;
+            
+            // Hooke's Law: F = -kx
+            const springForce = -springConstant * position;
+            
+            const totalForce = springForce;
+            
+            // F = ma, so a = F/m
+            const acceleration = totalForce / mass;
+            
+            // Update velocity and position using Euler integration
+            velocity += acceleration * dt;
+            position += velocity * dt;
+            
+            time += dt;
+            
+            // Update live data display
+            document.getElementById('position').textContent = position.toFixed(2);
+            document.getElementById('velocity').textContent = velocity.toFixed(2);
+            document.getElementById('force').textContent = totalForce.toFixed(2);
+            
+            const kineticEnergy = 0.5 * mass * velocity * velocity;
+            const potentialEnergy = 0.5 * springConstant * position * position;
+            const totalEnergy = kineticEnergy + potentialEnergy;
+            document.getElementById('energy').textContent = totalEnergy.toFixed(2);
+        }
+        
+        function drawSpring(x1, y1, x2, y2, coils = 16) {
+            try {
+                const springLength = Math.abs(y2 - y1);
+                const minLength = 50;
+                const actualLength = Math.max(minLength, springLength);
+                
+                ctx.save();
+                
+                // Draw spring coils
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                
+                // Start line
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x1, y1 + 10);
+                ctx.stroke();
+                
+                // Draw individual coils
+                const coilSpacing = (actualLength - 20) / coils;
+                const springWidth = 25;
+                
+                for (let i = 0; i < coils; i++) {
+                    const coilY = y1 + 10 + coilSpacing * i;
+                    
+                    // Create circular coil
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        x1, 
+                        coilY, 
+                        springWidth, 
+                        coilSpacing / 3, 
+                        0, 
+                        0, 
+                        2 * Math.PI
+                    );
+                    ctx.stroke();
+                    
+                    // Add depth with inner ellipse
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#6b7280';
+                    ctx.lineWidth = 1.5;
+                    ctx.ellipse(
+                        x1, 
+                        coilY, 
+                        springWidth * 0.7, 
+                        coilSpacing / 4, 
+                        0, 
+                        0, 
+                        2 * Math.PI
+                    );
+                    ctx.stroke();
+                    
+                    // Reset stroke style
+                    ctx.strokeStyle = '#4b5563';
+                    ctx.lineWidth = 2.5;
+                }
+                
+                // End line
+                ctx.beginPath();
+                ctx.moveTo(x1, y2 - 10);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                ctx.restore();
+            } catch (error) {
+                console.warn('Spring drawing error:', error);
+                // Fallback: draw simple line
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+        
+        function render() {
+            // Clear canvas with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw fixed attachment point
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(centerX - 15, 30, 30, 15);
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(centerX - 12, 33, 24, 9);
+            
+            // Calculate mass position
+            const massX = centerX;
+            const massY = centerY + position;
+            
+            // Draw spring - always render
+            drawSpring(centerX, 45, massX, massY - massSize/2);
+            
+            // Draw mass with gradient effect
+            const gradient = ctx.createLinearGradient(massX - massSize/2, massY - massSize/2, massX + massSize/2, massY + massSize/2);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#1d4ed8');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(massX - massSize/2, massY - massSize/2, massSize, massSize);
+            
+            // Add mass border
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(massX - massSize/2, massY - massSize/2, massSize, massSize);
+            
+            // Draw velocity vector
+            if (Math.abs(velocity) > 0.1) {
+                ctx.beginPath();
+                ctx.moveTo(massX + massSize/2 + 5, massY);
+                ctx.lineTo(massX + massSize/2 + 5 + velocity * 3, massY);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Arrow head
+                const arrowX = massX + massSize/2 + 5 + velocity * 3;
+                const arrowSize = 8;
+                ctx.beginPath();
+                ctx.moveTo(arrowX, massY);
+                if (velocity > 0) {
+                    ctx.lineTo(arrowX - arrowSize, massY - arrowSize/2);
+                    ctx.lineTo(arrowX - arrowSize, massY + arrowSize/2);
+                } else {
+                    ctx.lineTo(arrowX + arrowSize, massY - arrowSize/2);
+                    ctx.lineTo(arrowX + arrowSize, massY + arrowSize/2);
+                }
+                ctx.closePath();
+                ctx.fillStyle = '#f59e0b';
+                ctx.fill();
+                
+                // Velocity label
+                ctx.fillStyle = '#92400e';
+                ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
+                ctx.fillText('v', massX + massSize/2 + 10, massY - 10);
+            }
+            
+            // Draw equilibrium line
+            ctx.beginPath();
+            ctx.setLineDash([8, 4]);
+            ctx.moveTo(50, centerY);
+            ctx.lineTo(canvas.width - 50, centerY);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Equilibrium label
+            ctx.fillStyle = '#92400e';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText('Equilibrium', 60, centerY - 5);
+            
+            // Spring constant display
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText(`k = ${springConstant} N/m`, massX + 40, massY);
+        }
+        
+        function animate() {
+            updatePhysics(0.016); // ~60 FPS
+            render();
+            requestAnimationFrame(animate);
+        }
+        
+        // Initialize simulation
+        resetSimulation();
+        animate();
+        
+        // Allow clicking to displace the mass
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            position = clickY - centerY;
+            velocity = 0;
+        });
+    </script>
+</body>
+</html>

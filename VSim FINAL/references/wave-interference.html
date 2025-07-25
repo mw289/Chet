@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wave Interference Simulation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: #000;
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .control-button:hover {
+            background: #2980b9;
+        }
+        .control-button.active {
+            background: #e74c3c;
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wave Interference Simulation</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Frequency 1 = <span id="freq1Value">2.0</span> Hz
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="freq1" class="slider" min="0.5" max="5.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Frequency 2 = <span id="freq2Value">2.0</span> Hz
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="freq2" class="slider" min="0.5" max="5.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Amplitude 1 = <span id="amp1Value">1.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="amp1" class="slider" min="0.1" max="2.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Amplitude 2 = <span id="amp2Value">1.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="amp2" class="slider" min="0.1" max="2.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Phase Difference = <span id="phaseValue">0</span>°
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="phase" class="slider" min="0" max="360" value="0" step="10">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Controls</label>
+                    <div class="button-group">
+                        <button class="control-button active" id="playBtn">Play</button>
+                        <button class="control-button" id="pauseBtn">Pause</button>
+                        <button class="control-button" id="resetBtn">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let freq1 = 2.0;
+        let freq2 = 2.0;
+        let amp1 = 1.0;
+        let amp2 = 1.0;
+        let phaseDiff = 0;
+        
+        let time = 0;
+        let isPlaying = true;
+        
+        const centerY = canvas.height / 2;
+        const waveLength = canvas.width;
+        
+        function updateValues() {
+            freq1 = parseFloat(document.getElementById('freq1').value);
+            freq2 = parseFloat(document.getElementById('freq2').value);
+            amp1 = parseFloat(document.getElementById('amp1').value);
+            amp2 = parseFloat(document.getElementById('amp2').value);
+            phaseDiff = parseFloat(document.getElementById('phase').value) * Math.PI / 180;
+            
+            document.getElementById('freq1Value').textContent = freq1.toFixed(1);
+            document.getElementById('freq2Value').textContent = freq2.toFixed(1);
+            document.getElementById('amp1Value').textContent = amp1.toFixed(1);
+            document.getElementById('amp2Value').textContent = amp2.toFixed(1);
+            document.getElementById('phaseValue').textContent = Math.round(phaseDiff * 180 / Math.PI);
+        }
+        
+        function drawWaves() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Horizontal lines
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical lines
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Center line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+            
+            // Wave 1
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const k = 2 * Math.PI / 100; // wave number
+                const y1 = centerY + amp1 * 50 * Math.sin(k * x - 2 * Math.PI * freq1 * time);
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y1);
+                } else {
+                    ctx.lineTo(x, y1);
+                }
+            }
+            ctx.stroke();
+            
+            // Wave 2
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const k = 2 * Math.PI / 100;
+                const y2 = centerY + amp2 * 50 * Math.sin(k * x - 2 * Math.PI * freq2 * time + phaseDiff);
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y2);
+                } else {
+                    ctx.lineTo(x, y2);
+                }
+            }
+            ctx.stroke();
+            
+            // Resultant wave (interference)
+            ctx.strokeStyle = '#f39c12';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const k = 2 * Math.PI / 100;
+                const y1 = amp1 * 50 * Math.sin(k * x - 2 * Math.PI * freq1 * time);
+                const y2 = amp2 * 50 * Math.sin(k * x - 2 * Math.PI * freq2 * time + phaseDiff);
+                const yResult = centerY + y1 + y2;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, yResult);
+                } else {
+                    ctx.lineTo(x, yResult);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw legend
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.fillText('Wave 1', 20, 30);
+            ctx.fillText('Wave 2', 20, 55);
+            ctx.fillText('Resultant', 20, 80);
+            
+            // Draw colored squares for legend
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(100, 20, 20, 10);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(100, 45, 20, 10);
+            ctx.fillStyle = '#f39c12';
+            ctx.fillRect(100, 70, 20, 10);
+            
+            // Draw wave information
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            
+            const beatFreq = Math.abs(freq1 - freq2);
+            const resultantAmp = Math.sqrt(amp1*amp1 + amp2*amp2 + 2*amp1*amp2*Math.cos(phaseDiff));
+            
+            ctx.fillText(`Beat Frequency: ${beatFreq.toFixed(2)} Hz`, canvas.width - 250, 30);
+            ctx.fillText(`Resultant Amplitude: ${resultantAmp.toFixed(2)}`, canvas.width - 250, 55);
+            
+            if (Math.abs(phaseDiff % (2*Math.PI)) < 0.1) {
+                ctx.fillText('Constructive Interference', canvas.width - 250, 80);
+            } else if (Math.abs((phaseDiff % (2*Math.PI)) - Math.PI) < 0.1) {
+                ctx.fillText('Destructive Interference', canvas.width - 250, 80);
+            } else {
+                ctx.fillText('Partial Interference', canvas.width - 250, 80);
+            }
+        }
+        
+        function animate() {
+            if (isPlaying) {
+                time += 0.02;
+            }
+            
+            drawWaves();
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        document.getElementById('freq1').addEventListener('input', updateValues);
+        document.getElementById('freq2').addEventListener('input', updateValues);
+        document.getElementById('amp1').addEventListener('input', updateValues);
+        document.getElementById('amp2').addEventListener('input', updateValues);
+        document.getElementById('phase').addEventListener('input', updateValues);
+        
+        document.getElementById('playBtn').addEventListener('click', () => {
+            isPlaying = true;
+            document.getElementById('playBtn').classList.add('active');
+            document.getElementById('pauseBtn').classList.remove('active');
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPlaying = false;
+            document.getElementById('pauseBtn').classList.add('active');
+            document.getElementById('playBtn').classList.remove('active');
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            time = 0;
+            isPlaying = true;
+            document.getElementById('playBtn').classList.add('active');
+            document.getElementById('pauseBtn').classList.remove('active');
+        });
+        
+        // Initialize
+        updateValues();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Light Reflection Simulation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: #000;
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .control-button:hover {
+            background: #2980b9;
+        }
+        .control-button.active {
+            background: #e74c3c;
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Light Reflection Simulation</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Incident Angle = <span id="angleValue">30</span>°
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="angle" class="slider" min="0" max="89" value="30" step="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Mirror Curvature = <span id="curvatureValue">0.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="curvature" class="slider" min="-0.5" max="0.5" value="0" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Light Intensity = <span id="intensityValue">1.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="intensity" class="slider" min="0.1" max="2.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Number of Rays = <span id="raysValue">5</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="rays" class="slider" min="1" max="20" value="5" step="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Mirror Type</label>
+                    <div class="button-group">
+                        <button class="control-button active" id="planeBtn">Plane</button>
+                        <button class="control-button" id="concaveBtn">Concave</button>
+                        <button class="control-button" id="convexBtn">Convex</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Display Options</label>
+                    <div class="button-group">
+                        <button class="control-button" id="normalsBtn">Show Normals</button>
+                        <button class="control-button" id="anglesBtn">Show Angles</button>
+                        <button class="control-button" id="animateBtn">Animate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let incidentAngle = 30 * Math.PI / 180;
+        let mirrorCurvature = 0;
+        let lightIntensity = 1.0;
+        let numRays = 5;
+        let mirrorType = 'plane';
+        
+        let showNormals = false;
+        let showAngles = false;
+        let animate = false;
+        let animationTime = 0;
+        
+        const mirrorY = canvas.height * 0.7;
+        const mirrorLength = 400;
+        const mirrorCenterX = canvas.width / 2;
+        
+        function updateValues() {
+            incidentAngle = parseFloat(document.getElementById('angle').value) * Math.PI / 180;
+            mirrorCurvature = parseFloat(document.getElementById('curvature').value);
+            lightIntensity = parseFloat(document.getElementById('intensity').value);
+            numRays = parseInt(document.getElementById('rays').value);
+            
+            document.getElementById('angleValue').textContent = Math.round(incidentAngle * 180 / Math.PI);
+            document.getElementById('curvatureValue').textContent = mirrorCurvature.toFixed(2);
+            document.getElementById('intensityValue').textContent = lightIntensity.toFixed(1);
+            document.getElementById('raysValue').textContent = numRays;
+        }
+        
+        function drawMirror() {
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            
+            if (mirrorType === 'plane') {
+                ctx.moveTo(mirrorCenterX - mirrorLength/2, mirrorY);
+                ctx.lineTo(mirrorCenterX + mirrorLength/2, mirrorY);
+            } else {
+                // Curved mirror
+                const radius = 1 / Math.abs(mirrorCurvature);
+                const centerY = mirrorType === 'concave' ? mirrorY - radius : mirrorY + radius;
+                
+                for (let x = -mirrorLength/2; x <= mirrorLength/2; x += 2) {
+                    const realX = mirrorCenterX + x;
+                    let y;
+                    
+                    if (mirrorType === 'concave') {
+                        y = centerY + Math.sqrt(Math.max(0, radius*radius - x*x));
+                    } else {
+                        y = centerY - Math.sqrt(Math.max(0, radius*radius - x*x));
+                    }
+                    
+                    if (x === -mirrorLength/2) {
+                        ctx.moveTo(realX, y);
+                    } else {
+                        ctx.lineTo(realX, y);
+                    }
+                }
+            }
+            ctx.stroke();
+            
+            // Mirror backing
+            ctx.fillStyle = '#34495e';
+            ctx.lineWidth = 12;
+            ctx.stroke();
+        }
+        
+        function getMirrorPoint(x) {
+            if (mirrorType === 'plane') {
+                return { x: x, y: mirrorY };
+            } else {
+                const radius = 1 / Math.abs(mirrorCurvature);
+                const centerY = mirrorType === 'concave' ? mirrorY - radius : mirrorY + radius;
+                const relativeX = x - mirrorCenterX;
+                
+                let y;
+                if (mirrorType === 'concave') {
+                    y = centerY + Math.sqrt(Math.max(0, radius*radius - relativeX*relativeX));
+                } else {
+                    y = centerY - Math.sqrt(Math.max(0, radius*radius - relativeX*relativeX));
+                }
+                
+                return { x: x, y: y };
+            }
+        }
+        
+        function getNormal(x) {
+            if (mirrorType === 'plane') {
+                return { x: 0, y: -1 };
+            } else {
+                const radius = 1 / Math.abs(mirrorCurvature);
+                const centerY = mirrorType === 'concave' ? mirrorY - radius : mirrorY + radius;
+                const relativeX = x - mirrorCenterX;
+                const point = getMirrorPoint(x);
+                
+                let normalX = (point.x - mirrorCenterX) / radius;
+                let normalY = (point.y - centerY) / radius;
+                
+                if (mirrorType === 'convex') {
+                    normalX = -normalX;
+                    normalY = -normalY;
+                }
+                
+                const length = Math.sqrt(normalX*normalX + normalY*normalY);
+                return { x: normalX/length, y: normalY/length };
+            }
+        }
+        
+        function drawRays() {
+            const raySpacing = 40;
+            const startY = 100;
+            
+            for (let i = 0; i < numRays; i++) {
+                const rayY = startY + i * raySpacing;
+                const rayStartX = 50;
+                
+                // Calculate where ray hits mirror
+                let hitX, hitY;
+                if (mirrorType === 'plane') {
+                    const slope = Math.tan(incidentAngle);
+                    hitX = rayStartX + (mirrorY - rayY) / slope;
+                    hitY = mirrorY;
+                } else {
+                    // For curved mirrors, approximate intersection
+                    hitX = mirrorCenterX - 100 + i * 40;
+                    const mirrorPoint = getMirrorPoint(hitX);
+                    hitY = mirrorPoint.y;
+                }
+                
+                // Ensure hit point is within mirror bounds
+                if (hitX < mirrorCenterX - mirrorLength/2 || hitX > mirrorCenterX + mirrorLength/2) {
+                    continue;
+                }
+                
+                // Draw incident ray
+                const alpha = lightIntensity * 0.8;
+                ctx.strokeStyle = `rgba(255, 255, 0, ${alpha})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(rayStartX, rayY);
+                ctx.lineTo(hitX, hitY);
+                ctx.stroke();
+                
+                // Calculate reflection
+                const normal = getNormal(hitX);
+                const incidentDx = hitX - rayStartX;
+                const incidentDy = hitY - rayY;
+                const incidentLength = Math.sqrt(incidentDx*incidentDx + incidentDy*incidentDy);
+                const incidentUnitX = incidentDx / incidentLength;
+                const incidentUnitY = incidentDy / incidentLength;
+                
+                // Reflect using: R = I - 2(I·N)N
+                const dotProduct = incidentUnitX * normal.x + incidentUnitY * normal.y;
+                const reflectedX = incidentUnitX - 2 * dotProduct * normal.x;
+                const reflectedY = incidentUnitY - 2 * dotProduct * normal.y;
+                
+                // Draw reflected ray
+                ctx.strokeStyle = `rgba(255, 100, 100, ${alpha})`;
+                ctx.beginPath();
+                ctx.moveTo(hitX, hitY);
+                ctx.lineTo(hitX + reflectedX * 300, hitY + reflectedY * 300);
+                ctx.stroke();
+                
+                // Draw normal if enabled
+                if (showNormals) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(hitX, hitY);
+                    ctx.lineTo(hitX + normal.x * 50, hitY + normal.y * 50);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // Draw angles if enabled
+                if (showAngles) {
+                    const incidentAngleRad = Math.acos(-dotProduct);
+                    const incidentAngleDeg = incidentAngleRad * 180 / Math.PI;
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(`${incidentAngleDeg.toFixed(1)}°`, hitX - 30, hitY - 20);
+                    ctx.fillText(`${incidentAngleDeg.toFixed(1)}°`, hitX + 10, hitY - 20);
+                }
+                
+                // Draw hit point
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(hitX, hitY, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        
+        function drawBackground() {
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw light source
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(50, 200, 15, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Light source glow
+            const gradient = ctx.createRadialGradient(50, 200, 0, 50, 200, 40);
+            gradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
+            gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(50, 200, 40, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        function animate() {
+            drawBackground();
+            drawMirror();
+            drawRays();
+            
+            if (animate) {
+                animationTime += 0.02;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        document.getElementById('angle').addEventListener('input', updateValues);
+        document.getElementById('curvature').addEventListener('input', updateValues);
+        document.getElementById('intensity').addEventListener('input', updateValues);
+        document.getElementById('rays').addEventListener('input', updateValues);
+        
+        document.getElementById('planeBtn').addEventListener('click', () => {
+            mirrorType = 'plane';
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('planeBtn').classList.add('active');
+        });
+        
+        document.getElementById('concaveBtn').addEventListener('click', () => {
+            mirrorType = 'concave';
+            mirrorCurvature = Math.abs(mirrorCurvature) || 0.1;
+            document.getElementById('curvature').value = mirrorCurvature;
+            updateValues();
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('concaveBtn').classList.add('active');
+        });
+        
+        document.getElementById('convexBtn').addEventListener('click', () => {
+            mirrorType = 'convex';
+            mirrorCurvature = -Math.abs(mirrorCurvature) || -0.1;
+            document.getElementById('curvature').value = mirrorCurvature;
+            updateValues();
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('convexBtn').classList.add('active');
+        });
+        
+        document.getElementById('normalsBtn').addEventListener('click', () => {
+            showNormals = !showNormals;
+            document.getElementById('normalsBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('anglesBtn').addEventListener('click', () => {
+            showAngles = !showAngles;
+            document.getElementById('anglesBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('animateBtn').addEventListener('click', () => {
+            animate = !animate;
+            document.getElementById('animateBtn').classList.toggle('active');
+        });
+        
+        // Initialize
+        updateValues();
+        animate();
+    </script>
+</body>
+</html>

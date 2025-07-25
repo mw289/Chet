@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Double-Slit Experiment</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: #000;
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .wavelength-slider {
+            background: linear-gradient(to right, #8B00FF 0%, #0000FF 16.67%, #00FF00 33.33%, #FFFF00 50%, #FF7F00 66.67%, #FF0000 83.33%, #8B00FF 100%);
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        .dimensions {
+            position: absolute;
+            color: #ecf0f1;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Double-Slit Experiment</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="1200" height="400"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Wavelength = <span id="wavelengthValue">576</span> nm
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="wavelength" class="slider wavelength-slider" min="380" max="750" value="576">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Slit's width = <span id="slitWidthValue">2.9</span> μm
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="slitWidth" class="slider" min="0.5" max="10" value="2.9" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Distance between slits = <span id="slitSepValue">20</span> μm
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="slitSep" class="slider" min="5" max="50" value="20" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Slit ~ Screen = <span id="screenDistValue">1.0</span> m
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="screenDist" class="slider" min="0.5" max="3.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let wavelength = 576e-9; // meters
+        let slitWidth = 2.9e-6; // meters
+        let slitSeparation = 20e-6; // meters
+        let screenDistance = 1.0; // meters
+        let animationTime = 0;
+        
+        // Wavelength to RGB conversion
+        function wavelengthToRGB(wavelength) {
+            const wl = wavelength * 1e9; // Convert to nm
+            let r, g, b;
+            
+            if (wl >= 380 && wl < 440) {
+                r = -(wl - 440) / (440 - 380);
+                g = 0.0;
+                b = 1.0;
+            } else if (wl >= 440 && wl < 490) {
+                r = 0.0;
+                g = (wl - 440) / (490 - 440);
+                b = 1.0;
+            } else if (wl >= 490 && wl < 510) {
+                r = 0.0;
+                g = 1.0;
+                b = -(wl - 510) / (510 - 490);
+            } else if (wl >= 510 && wl < 580) {
+                r = (wl - 510) / (580 - 510);
+                g = 1.0;
+                b = 0.0;
+            } else if (wl >= 580 && wl < 645) {
+                r = 1.0;
+                g = -(wl - 645) / (645 - 580);
+                b = 0.0;
+            } else if (wl >= 645 && wl <= 750) {
+                r = 1.0;
+                g = 0.0;
+                b = 0.0;
+            } else {
+                r = 0.0;
+                g = 0.0;
+                b = 0.0;
+            }
+            
+            // Intensity factor
+            let factor;
+            if (wl >= 380 && wl < 420) {
+                factor = 0.3 + 0.7 * (wl - 380) / (420 - 380);
+            } else if (wl >= 420 && wl <= 700) {
+                factor = 1.0;
+            } else if (wl > 700 && wl <= 750) {
+                factor = 0.3 + 0.7 * (750 - wl) / (750 - 700);
+            } else {
+                factor = 0.0;
+            }
+            
+            return {
+                r: Math.round(255 * r * factor),
+                g: Math.round(255 * g * factor),
+                b: Math.round(255 * b * factor)
+            };
+        }
+        
+        function updateValues() {
+            wavelength = parseFloat(document.getElementById('wavelength').value) * 1e-9;
+            slitWidth = parseFloat(document.getElementById('slitWidth').value) * 1e-6;
+            slitSeparation = parseFloat(document.getElementById('slitSep').value) * 1e-6;
+            screenDistance = parseFloat(document.getElementById('screenDist').value);
+            
+            document.getElementById('wavelengthValue').textContent = Math.round(wavelength * 1e9);
+            document.getElementById('slitWidthValue').textContent = (slitWidth * 1e6).toFixed(1);
+            document.getElementById('slitSepValue').textContent = (slitSeparation * 1e6).toFixed(1);
+            document.getElementById('screenDistValue').textContent = screenDistance.toFixed(1);
+        }
+        
+        function drawSetup() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const scale = canvas.width / 1.5; // Scale factor for visualization
+            const centerY = canvas.height / 2;
+            
+            // Draw discharge tube (light source)
+            const tubeX = 50;
+            const tubeWidth = 80;
+            const tubeHeight = 30;
+            
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(tubeX, centerY - tubeHeight/2, tubeWidth, tubeHeight);
+            
+            // Draw tube details
+            ctx.fillStyle = '#D2691E';
+            ctx.fillRect(tubeX + 10, centerY - tubeHeight/2 + 5, tubeWidth - 20, tubeHeight - 10);
+            
+            // Draw slit barrier
+            const slitX = 300;
+            const barrierWidth = 20;
+            const barrierHeight = canvas.height;
+            
+            ctx.fillStyle = '#2C3E50';
+            ctx.fillRect(slitX, 0, barrierWidth, barrierHeight);
+            
+            // Draw slits
+            const slitPixelSep = (slitSeparation / 50e-6) * 60; // Scale for visualization
+            const slitPixelWidth = Math.max(2, (slitWidth / 5e-6) * 10);
+            
+            const slit1Y = centerY - slitPixelSep/2;
+            const slit2Y = centerY + slitPixelSep/2;
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(slitX, slit1Y - slitPixelWidth/2, barrierWidth, slitPixelWidth);
+            ctx.fillRect(slitX, slit2Y - slitPixelWidth/2, barrierWidth, slitPixelWidth);
+            
+            // Draw screen
+            const screenX = 900;
+            ctx.fillStyle = '#ECF0F1';
+            ctx.fillRect(screenX, 0, 20, canvas.height);
+            
+            // Draw dimensions
+            ctx.fillStyle = '#BDC3C7';
+            ctx.font = '11px Arial';
+            
+            // Slit width dimension
+            ctx.fillText(`${(slitWidth * 1e6).toFixed(1)} μm`, slitX + 30, slit1Y - 10);
+            
+            // Slit separation dimension
+            ctx.fillText(`${(slitSeparation * 1e6).toFixed(1)} μm`, slitX + 30, centerY + 30);
+            
+            // Distance to screen
+            ctx.fillText(`${screenDistance} m`, (slitX + screenX) / 2, centerY + 50);
+            
+            // Draw distance line
+            ctx.strokeStyle = '#BDC3C7';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(slitX + barrierWidth, centerY + 40);
+            ctx.lineTo(screenX, centerY + 40);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            return { tubeX, tubeWidth, slitX, barrierWidth, screenX, slit1Y, slit2Y, slitPixelWidth };
+        }
+        
+        function drawInterferencePattern(setup) {
+            const { screenX } = setup;
+            const rgb = wavelengthToRGB(wavelength);
+            
+            // Calculate and draw interference pattern
+            for (let y = 0; y < canvas.height; y++) {
+                // Convert screen y-coordinate to real-world position (in meters)
+                // This scaling factor now properly accounts for screen distance
+                const screenY = (y - canvas.height/2) * 1e-4; // Scale to real units
+                
+                // Path difference calculation - properly scaled with screen distance
+                const r1 = Math.sqrt(Math.pow(screenDistance, 2) + Math.pow(screenY + slitSeparation/2, 2));
+                const r2 = Math.sqrt(Math.pow(screenDistance, 2) + Math.pow(screenY - slitSeparation/2, 2));
+                const pathDiff = r2 - r1;
+                
+                // Phase difference
+                const phaseDiff = 2 * Math.PI * pathDiff / wavelength;
+                
+                // Double-slit interference
+                const interference = Math.pow(Math.cos(phaseDiff / 2), 2);
+                
+                // Single-slit diffraction envelope
+                const beta = Math.PI * slitWidth * screenY / (wavelength * screenDistance);
+                const diffraction = beta === 0 ? 1 : Math.pow(Math.sin(beta) / beta, 2);
+                
+                // Combined intensity
+                const intensity = interference * diffraction;
+                
+                // Apply color and intensity
+                const r = Math.floor(rgb.r * intensity);
+                const g = Math.floor(rgb.g * intensity);
+                const b = Math.floor(rgb.b * intensity);
+                
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.fillRect(screenX, y, 20, 1);
+            }
+        }
+        
+        function drawWaves(setup) {
+            const { tubeX, tubeWidth, slitX, slit1Y, slit2Y, screenX } = setup;
+            const rgb = wavelengthToRGB(wavelength);
+            const waveColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`;
+            
+            ctx.strokeStyle = waveColor;
+            ctx.lineWidth = 2;
+            
+            // Incident waves
+            const k = 2 * Math.PI / (wavelength * 1000); // Scale for visualization
+            const omega = 0.1; // Animation speed
+            
+            for (let i = 0; i < 5; i++) {
+                const waveY = canvas.height/2 + (i - 2) * 15;
+                ctx.beginPath();
+                
+                for (let x = tubeX + tubeWidth; x < slitX; x++) {
+                    const phase = k * x - omega * animationTime;
+                    const amplitude = 8;
+                    const y = waveY + amplitude * Math.sin(phase);
+                    
+                    if (x === tubeX + tubeWidth) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Waves from slits to screen
+            const numRays = 20;
+            for (let i = 0; i < numRays; i++) {
+                const screenY = (i / (numRays - 1)) * canvas.height;
+                const realScreenY = (screenY - canvas.height/2) * 1e-4;
+                
+                // Calculate intensity at this point - properly scaled with screen distance
+                const r1 = Math.sqrt(Math.pow(screenDistance, 2) + Math.pow(realScreenY + slitSeparation/2, 2));
+                const r2 = Math.sqrt(Math.pow(screenDistance, 2) + Math.pow(realScreenY - slitSeparation/2, 2));
+                const pathDiff = r2 - r1;
+                const phaseDiff = 2 * Math.PI * pathDiff / wavelength;
+                const intensity = Math.pow(Math.cos(phaseDiff / 2), 2);
+                
+                if (intensity > 0.1) {
+                    const alpha = Math.min(intensity, 1.0);
+                    ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.4})`;
+                    ctx.lineWidth = Math.max(1, intensity * 3);
+                    
+                    // Wave from slit 1
+                    ctx.beginPath();
+                    ctx.moveTo(slitX + 20, slit1Y);
+                    ctx.lineTo(screenX, screenY);
+                    ctx.stroke();
+                    
+                    // Wave from slit 2
+                    ctx.beginPath();
+                    ctx.moveTo(slitX + 20, slit2Y);
+                    ctx.lineTo(screenX, screenY);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function animate() {
+            const setup = drawSetup();
+            drawInterferencePattern(setup);
+            drawWaves(setup);
+            
+            animationTime += 1;
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        document.getElementById('wavelength').addEventListener('input', updateValues);
+        document.getElementById('slitWidth').addEventListener('input', updateValues);
+        document.getElementById('slitSep').addEventListener('input', updateValues);
+        document.getElementById('screenDist').addEventListener('input', updateValues);
+        
+        // Initialize
+        updateValues();
+        animate();
+    </script>
+</body>
+</html>

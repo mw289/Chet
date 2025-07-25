@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Moments and Equilibrium Simulation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: #f8f9fa;
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .control-button:hover {
+            background: #2980b9;
+        }
+        .control-button.active {
+            background: #e74c3c;
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Moments and Equilibrium Simulation</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Mass 1 = <span id="mass1Value">5.0</span> kg
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="mass1" class="slider" min="1" max="20" value="5" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Mass 2 = <span id="mass2Value">5.0</span> kg
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="mass2" class="slider" min="1" max="20" value="5" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Distance 1 = <span id="dist1Value">2.0</span> m
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="dist1" class="slider" min="0.5" max="4.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Distance 2 = <span id="dist2Value">2.0</span> m
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="dist2" class="slider" min="0.5" max="4.0" value="2.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Fulcrum Position = <span id="fulcrumValue">0.0</span> m
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="fulcrum" class="slider" min="-2.0" max="2.0" value="0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Display Options</label>
+                    <div class="button-group">
+                        <button class="control-button active" id="forcesBtn">Show Forces</button>
+                        <button class="control-button active" id="momentsBtn">Show Moments</button>
+                        <button class="control-button" id="animateBtn">Animate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let mass1 = 5.0;
+        let mass2 = 5.0;
+        let dist1 = 2.0;
+        let dist2 = 2.0;
+        let fulcrumPos = 0.0;
+        
+        let showForces = true;
+        let showMoments = true;
+        let animate = false;
+        let animationTime = 0;
+        
+        const centerX = canvas.width / 2;
+        const leverY = 300;
+        const scale = 80; // pixels per meter
+        const gravity = 9.81;
+        
+        function updateValues() {
+            mass1 = parseFloat(document.getElementById('mass1').value);
+            mass2 = parseFloat(document.getElementById('mass2').value);
+            dist1 = parseFloat(document.getElementById('dist1').value);
+            dist2 = parseFloat(document.getElementById('dist2').value);
+            fulcrumPos = parseFloat(document.getElementById('fulcrum').value);
+            
+            document.getElementById('mass1Value').textContent = mass1.toFixed(1);
+            document.getElementById('mass2Value').textContent = mass2.toFixed(1);
+            document.getElementById('dist1Value').textContent = dist1.toFixed(1);
+            document.getElementById('dist2Value').textContent = dist2.toFixed(1);
+            document.getElementById('fulcrumValue').textContent = fulcrumPos.toFixed(1);
+        }
+        
+        function calculateEquilibrium() {
+            const fulcrumX = centerX + fulcrumPos * scale;
+            const mass1X = fulcrumX - dist1 * scale;
+            const mass2X = fulcrumX + dist2 * scale;
+            
+            const moment1 = mass1 * gravity * dist1;
+            const moment2 = mass2 * gravity * dist2;
+            const netMoment = moment2 - moment1;
+            
+            return {
+                fulcrumX,
+                mass1X,
+                mass2X,
+                moment1,
+                moment2,
+                netMoment,
+                isBalanced: Math.abs(netMoment) < 0.1
+            };
+        }
+        
+        function drawLever() {
+            const eq = calculateEquilibrium();
+            
+            // Calculate lever angle based on net moment
+            let leverAngle = 0;
+            if (!eq.isBalanced) {
+                leverAngle = Math.atan(eq.netMoment / 100) * 0.1; // Small angle for visualization
+                if (animate) {
+                    leverAngle *= Math.sin(animationTime * 2);
+                }
+            }
+            
+            // Draw lever beam
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 8;
+            ctx.save();
+            ctx.translate(eq.fulcrumX, leverY);
+            ctx.rotate(leverAngle);
+            
+            const leverLength = Math.max(dist1, dist2) * scale + 100;
+            ctx.beginPath();
+            ctx.moveTo(-leverLength, 0);
+            ctx.lineTo(leverLength, 0);
+            ctx.stroke();
+            ctx.restore();
+            
+            // Draw fulcrum
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.moveTo(eq.fulcrumX - 20, leverY);
+            ctx.lineTo(eq.fulcrumX + 20, leverY);
+            ctx.lineTo(eq.fulcrumX, leverY - 30);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Draw masses
+            const mass1Y = leverY + Math.sin(leverAngle) * (-dist1 * scale) - Math.cos(leverAngle) * 0;
+            const mass2Y = leverY + Math.sin(leverAngle) * (dist2 * scale) - Math.cos(leverAngle) * 0;
+            
+            // Mass 1
+            const mass1Size = Math.sqrt(mass1) * 15;
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(eq.mass1X - mass1Size/2, mass1Y - mass1Size, mass1Size, mass1Size);
+            
+            // Mass 2
+            const mass2Size = Math.sqrt(mass2) * 15;
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(eq.mass2X - mass2Size/2, mass2Y - mass2Size, mass2Size, mass2Size);
+            
+            // Draw strings
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(eq.mass1X, leverY + Math.sin(leverAngle) * (-dist1 * scale));
+            ctx.lineTo(eq.mass1X, mass1Y - mass1Size);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(eq.mass2X, leverY + Math.sin(leverAngle) * (dist2 * scale));
+            ctx.lineTo(eq.mass2X, mass2Y - mass2Size);
+            ctx.stroke();
+            
+            return { eq, mass1Y, mass2Y, mass1Size, mass2Size };
+        }
+        
+        function drawForces(data) {
+            if (!showForces) return;
+            
+            const { eq, mass1Y, mass2Y, mass1Size, mass2Size } = data;
+            const forceScale = 5; // pixels per Newton
+            
+            // Weight forces
+            const weight1 = mass1 * gravity;
+            const weight2 = mass2 * gravity;
+            
+            // Draw weight vectors
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([]);
+            
+            // Weight 1
+            ctx.beginPath();
+            ctx.moveTo(eq.mass1X, mass1Y - mass1Size);
+            ctx.lineTo(eq.mass1X, mass1Y - mass1Size + weight1 * forceScale);
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(eq.mass1X, mass1Y - mass1Size + weight1 * forceScale);
+            ctx.lineTo(eq.mass1X - 5, mass1Y - mass1Size + weight1 * forceScale - 10);
+            ctx.lineTo(eq.mass1X + 5, mass1Y - mass1Size + weight1 * forceScale - 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Weight 2
+            ctx.strokeStyle = '#3498db';
+            ctx.beginPath();
+            ctx.moveTo(eq.mass2X, mass2Y - mass2Size);
+            ctx.lineTo(eq.mass2X, mass2Y - mass2Size + weight2 * forceScale);
+            ctx.stroke();
+            
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(eq.mass2X, mass2Y - mass2Size + weight2 * forceScale);
+            ctx.lineTo(eq.mass2X - 5, mass2Y - mass2Size + weight2 * forceScale - 10);
+            ctx.lineTo(eq.mass2X + 5, mass2Y - mass2Size + weight2 * forceScale - 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Force labels
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '14px Arial';
+            ctx.fillText(`${weight1.toFixed(1)} N`, eq.mass1X + 10, mass1Y - mass1Size + weight1 * forceScale / 2);
+            ctx.fillText(`${weight2.toFixed(1)} N`, eq.mass2X + 10, mass2Y - mass2Size + weight2 * forceScale / 2);
+        }
+        
+        function drawMoments(eq) {
+            if (!showMoments) return;
+            
+            // Draw moment arms
+            ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            
+            // Moment arm 1
+            ctx.beginPath();
+            ctx.moveTo(eq.fulcrumX, leverY);
+            ctx.lineTo(eq.mass1X, leverY);
+            ctx.stroke();
+            
+            // Moment arm 2
+            ctx.beginPath();
+            ctx.moveTo(eq.fulcrumX, leverY);
+            ctx.lineTo(eq.mass2X, leverY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Draw curved arrows for moments
+            const radius = 40;
+            
+            // Moment 1 (clockwise)
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(eq.fulcrumX, leverY, radius, -Math.PI/4, -3*Math.PI/4, true);
+            ctx.stroke();
+            
+            // Moment 2 (counter-clockwise)
+            ctx.strokeStyle = '#3498db';
+            ctx.beginPath();
+            ctx.arc(eq.fulcrumX, leverY, radius + 10, Math.PI/4, 3*Math.PI/4, false);
+            ctx.stroke();
+        }
+        
+        function drawInfo(eq) {
+            // Information panel
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(20, 20, 300, 180);
+            ctx.strokeStyle = '#bdc3c7';
+            ctx.strokeRect(20, 20, 300, 180);
+            
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '16px Arial';
+            ctx.fillText('Moments Analysis', 30, 45);
+            
+            ctx.font = '14px Arial';
+            ctx.fillText(`Moment 1: ${eq.moment1.toFixed(2)} N⋅m`, 30, 70);
+            ctx.fillText(`Moment 2: ${eq.moment2.toFixed(2)} N⋅m`, 30, 90);
+            ctx.fillText(`Net Moment: ${eq.netMoment.toFixed(2)} N⋅m`, 30, 110);
+            
+            ctx.fillStyle = eq.isBalanced ? '#27ae60' : '#e74c3c';
+            ctx.font = '16px Arial';
+            ctx.fillText(eq.isBalanced ? 'BALANCED' : 'NOT BALANCED', 30, 140);
+            
+            if (!eq.isBalanced) {
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = '12px Arial';
+                const direction = eq.netMoment > 0 ? 'clockwise' : 'counter-clockwise';
+                ctx.fillText(`Tendency to rotate ${direction}`, 30, 160);
+            }
+            
+            // Equilibrium condition
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = '12px Arial';
+            ctx.fillText('For equilibrium: Σ moments = 0', 30, 185);
+        }
+        
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#95a5a6';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Draw measurement scale
+            ctx.strokeStyle = '#bdc3c7';
+            ctx.lineWidth = 1;
+            
+            for (let i = -4; i <= 4; i++) {
+                const x = centerX + i * scale;
+                ctx.beginPath();
+                ctx.moveTo(x, leverY + 40);
+                ctx.lineTo(x, leverY + 50);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#7f8c8d';
+                ctx.font = '12px Arial';
+                ctx.fillText(`${i}m`, x - 8, leverY + 65);
+            }
+        }
+        
+        function animate() {
+            drawBackground();
+            const data = drawLever();
+            drawForces(data);
+            drawMoments(data.eq);
+            drawInfo(data.eq);
+            
+            if (animate) {
+                animationTime += 0.02;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        document.getElementById('mass1').addEventListener('input', updateValues);
+        document.getElementById('mass2').addEventListener('input', updateValues);
+        document.getElementById('dist1').addEventListener('input', updateValues);
+        document.getElementById('dist2').addEventListener('input', updateValues);
+        document.getElementById('fulcrum').addEventListener('input', updateValues);
+        
+        document.getElementById('forcesBtn').addEventListener('click', () => {
+            showForces = !showForces;
+            document.getElementById('forcesBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('momentsBtn').addEventListener('click', () => {
+            showMoments = !showMoments;
+            document.getElementById('momentsBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('animateBtn').addEventListener('click', () => {
+            animate = !animate;
+            document.getElementById('animateBtn').classList.toggle('active');
+        });
+        
+        // Initialize
+        updateValues();
+        animate();
+    </script>
+</body>
+</html>

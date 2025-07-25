@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Projectile Motion Simulation</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .simulation-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 2px solid #e1e8ed;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            display: block; 
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-container {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e8ed;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .control-button:hover {
+            background: #2980b9;
+        }
+        .control-button.active {
+            background: #e74c3c;
+        }
+        .value-display {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .value-display { position: static; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Projectile Motion Simulation</h1>
+        
+        <div class="simulation-area">
+            <canvas id="canvas" width="1000" height="500"></canvas>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label class="control-label">
+                        Initial Velocity = <span id="velocityValue">50</span> m/s
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="velocity" class="slider" min="10" max="100" value="50" step="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Launch Angle = <span id="angleValue">45</span>°
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="angle" class="slider" min="5" max="85" value="45" step="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Height = <span id="heightValue">0</span> m
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="height" class="slider" min="0" max="100" value="0" step="5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        Air Resistance = <span id="dragValue">0.0</span>
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="drag" class="slider" min="0" max="0.1" value="0" step="0.005">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Controls</label>
+                    <div class="button-group">
+                        <button class="control-button" id="launchBtn">Launch</button>
+                        <button class="control-button" id="pauseBtn">Pause</button>
+                        <button class="control-button" id="resetBtn">Reset</button>
+                        <button class="control-button" id="trailBtn">Toggle Trail</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Display Options</label>
+                    <div class="button-group">
+                        <button class="control-button" id="vectorsBtn">Show Vectors</button>
+                        <button class="control-button" id="infoBtn">Show Info</button>
+                        <button class="control-button" id="gridBtn">Show Grid</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let initialVelocity = 50;
+        let launchAngle = 45 * Math.PI / 180;
+        let initialHeight = 0;
+        let dragCoefficient = 0;
+        let gravity = 9.81;
+        
+        let projectile = {
+            x: 50,
+            y: canvas.height - 50,
+            vx: 0,
+            vy: 0,
+            active: false
+        };
+        
+        let isRunning = false;
+        let showTrail = false;
+        let showVectors = false;
+        let showInfo = false;
+        let showGrid = false;
+        
+        let trail = [];
+        let time = 0;
+        let scale = 2; // pixels per meter
+        
+        function updateValues() {
+            initialVelocity = parseFloat(document.getElementById('velocity').value);
+            launchAngle = parseFloat(document.getElementById('angle').value) * Math.PI / 180;
+            initialHeight = parseFloat(document.getElementById('height').value);
+            dragCoefficient = parseFloat(document.getElementById('drag').value);
+            
+            document.getElementById('velocityValue').textContent = initialVelocity;
+            document.getElementById('angleValue').textContent = Math.round(launchAngle * 180 / Math.PI);
+            document.getElementById('heightValue').textContent = initialHeight;
+            document.getElementById('dragValue').textContent = dragCoefficient.toFixed(3);
+        }
+        
+        function resetProjectile() {
+            projectile.x = 50;
+            projectile.y = canvas.height - 50 - initialHeight * scale;
+            projectile.vx = initialVelocity * Math.cos(launchAngle);
+            projectile.vy = -initialVelocity * Math.sin(launchAngle);
+            projectile.active = false;
+            trail = [];
+            time = 0;
+        }
+        
+        function drawBackground() {
+            // Sky gradient is already in CSS
+            
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Draw grass
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, canvas.height - 55, canvas.width, 5);
+            
+            // Draw grid if enabled
+            if (showGrid) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 1;
+                
+                // Vertical lines (every 50 pixels = 25 meters)
+                for (let x = 0; x < canvas.width; x += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height - 50);
+                    ctx.stroke();
+                }
+                
+                // Horizontal lines
+                for (let y = 0; y < canvas.height - 50; y += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Grid labels
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.font = '10px Arial';
+                for (let x = 50; x < canvas.width; x += 100) {
+                    ctx.fillText(`${x/scale}m`, x - 10, canvas.height - 30);
+                }
+            }
+        }
+        
+        function drawProjectile() {
+            // Draw trail
+            if (showTrail && trail.length > 1) {
+                ctx.strokeStyle = 'rgba(231, 76, 60, 0.6)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(trail[0].x, trail[0].y);
+                for (let i = 1; i < trail.length; i++) {
+                    ctx.lineTo(trail[i].x, trail[i].y);
+                }
+                ctx.stroke();
+            }
+            
+            // Draw cannon
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(30, canvas.height - 70 - initialHeight * scale, 40, 20);
+            
+            // Draw cannon barrel
+            ctx.save();
+            ctx.translate(50, canvas.height - 60 - initialHeight * scale);
+            ctx.rotate(launchAngle);
+            ctx.fillRect(0, -3, 30, 6);
+            ctx.restore();
+            
+            // Draw projectile
+            if (projectile.active || !isRunning) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(projectile.x, projectile.y, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw vectors
+                if (showVectors && projectile.active) {
+                    drawVectors();
+                }
+            }
+            
+            // Draw trajectory prediction (when not launched)
+            if (!projectile.active && !isRunning) {
+                drawTrajectoryPrediction();
+            }
+        }
+        
+        function drawVectors() {
+            const vectorScale = 2;
+            
+            // Velocity vector
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(projectile.x, projectile.y);
+            ctx.lineTo(projectile.x + projectile.vx * vectorScale, projectile.y + projectile.vy * vectorScale);
+            ctx.stroke();
+            
+            // Velocity components
+            ctx.strokeStyle = 'rgba(39, 174, 96, 0.5)';
+            ctx.lineWidth = 2;
+            
+            // Horizontal component
+            ctx.beginPath();
+            ctx.moveTo(projectile.x, projectile.y);
+            ctx.lineTo(projectile.x + projectile.vx * vectorScale, projectile.y);
+            ctx.stroke();
+            
+            // Vertical component
+            ctx.beginPath();
+            ctx.moveTo(projectile.x, projectile.y);
+            ctx.lineTo(projectile.x, projectile.y + projectile.vy * vectorScale);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#27ae60';
+            ctx.font = '12px Arial';
+            ctx.fillText('v', projectile.x + projectile.vx * vectorScale + 5, projectile.y + projectile.vy * vectorScale);
+            ctx.fillText('vx', projectile.x + projectile.vx * vectorScale/2, projectile.y - 10);
+            ctx.fillText('vy', projectile.x - 20, projectile.y + projectile.vy * vectorScale/2);
+        }
+        
+        function drawTrajectoryPrediction() {
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            
+            let x = 50;
+            let y = canvas.height - 50 - initialHeight * scale;
+            let vx = initialVelocity * Math.cos(launchAngle);
+            let vy = -initialVelocity * Math.sin(launchAngle);
+            let t = 0;
+            let dt = 0.05;
+            
+            ctx.moveTo(x, y);
+            
+            while (y < canvas.height - 50 && x < canvas.width) {
+                t += dt;
+                
+                // Update position (without air resistance for prediction)
+                x = 50 + vx * t;
+                y = (canvas.height - 50 - initialHeight * scale) + vy * t + 0.5 * gravity * scale * t * t;
+                
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function drawInfo() {
+            if (!showInfo) return;
+            
+            const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+            const height = (canvas.height - 50 - projectile.y) / scale;
+            const distance = (projectile.x - 50) / scale;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillRect(10, 10, 200, 120);
+            ctx.strokeStyle = '#bdc3c7';
+            ctx.strokeRect(10, 10, 200, 120);
+            
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '14px Arial';
+            ctx.fillText(`Time: ${time.toFixed(1)} s`, 20, 30);
+            ctx.fillText(`Speed: ${speed.toFixed(1)} m/s`, 20, 50);
+            ctx.fillText(`Height: ${height.toFixed(1)} m`, 20, 70);
+            ctx.fillText(`Distance: ${distance.toFixed(1)} m`, 20, 90);
+            ctx.fillText(`Vx: ${projectile.vx.toFixed(1)} m/s`, 20, 110);
+            ctx.fillText(`Vy: ${(-projectile.vy).toFixed(1)} m/s`, 120, 110);
+        }
+        
+        function updatePhysics() {
+            if (!isRunning || !projectile.active) return;
+            
+            const dt = 0.016; // 60 FPS
+            
+            // Air resistance
+            const speed = Math.sqrt(projectile.vx * projectile.vx + projectile.vy * projectile.vy);
+            const dragForceX = -dragCoefficient * speed * projectile.vx;
+            const dragForceY = -dragCoefficient * speed * projectile.vy;
+            
+            // Update velocity
+            projectile.vx += dragForceX * dt;
+            projectile.vy += (gravity * scale + dragForceY) * dt;
+            
+            // Update position
+            projectile.x += projectile.vx * dt;
+            projectile.y += projectile.vy * dt;
+            
+            time += dt;
+            
+            // Add to trail
+            if (showTrail) {
+                trail.push({x: projectile.x, y: projectile.y});
+                if (trail.length > 300) {
+                    trail.shift();
+                }
+            }
+            
+            // Check for ground collision
+            if (projectile.y >= canvas.height - 50) {
+                projectile.y = canvas.height - 50;
+                projectile.active = false;
+                isRunning = false;
+                document.getElementById('launchBtn').classList.remove('active');
+                document.getElementById('pauseBtn').classList.remove('active');
+            }
+            
+            // Check if projectile is off screen
+            if (projectile.x > canvas.width) {
+                projectile.active = false;
+                isRunning = false;
+                document.getElementById('launchBtn').classList.remove('active');
+                document.getElementById('pauseBtn').classList.remove('active');
+            }
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            updatePhysics();
+            drawProjectile();
+            drawInfo();
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        document.getElementById('velocity').addEventListener('input', updateValues);
+        document.getElementById('angle').addEventListener('input', updateValues);
+        document.getElementById('height').addEventListener('input', updateValues);
+        document.getElementById('drag').addEventListener('input', updateValues);
+        
+        document.getElementById('launchBtn').addEventListener('click', () => {
+            if (!projectile.active) {
+                resetProjectile();
+                projectile.active = true;
+                isRunning = true;
+                document.getElementById('launchBtn').classList.add('active');
+                document.getElementById('pauseBtn').classList.remove('active');
+            }
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isRunning = !isRunning;
+            document.getElementById('pauseBtn').classList.toggle('active');
+            if (isRunning) {
+                document.getElementById('launchBtn').classList.add('active');
+            } else {
+                document.getElementById('launchBtn').classList.remove('active');
+            }
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            resetProjectile();
+            document.getElementById('launchBtn').classList.remove('active');
+            document.getElementById('pauseBtn').classList.remove('active');
+        });
+        
+        document.getElementById('trailBtn').addEventListener('click', () => {
+            showTrail = !showTrail;
+            if (!showTrail) trail = [];
+            document.getElementById('trailBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('vectorsBtn').addEventListener('click', () => {
+            showVectors = !showVectors;
+            document.getElementById('vectorsBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('infoBtn').addEventListener('click', () => {
+            showInfo = !showInfo;
+            document.getElementById('infoBtn').classList.toggle('active');
+        });
+        
+        document.getElementById('gridBtn').addEventListener('click', () => {
+            showGrid = !showGrid;
+            document.getElementById('gridBtn').classList.toggle('active');
+        });
+        
+        // Initialize
+        updateValues();
+        resetProjectile();
+        animate();
+    </script>
+</body>
+</html>
