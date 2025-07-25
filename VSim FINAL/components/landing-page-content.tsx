@@ -7,34 +7,26 @@ import { Brain, Zap, Target, Play, ArrowRight, CheckCircle, Users, Sparkles } fr
 import Link from "next/link"
 import Image from "next/image"
 import { useI18n } from "@/lib/i18n/context"
+import { useMemo } from "react"
 import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function LandingPageContent() {
-  const { t } = useI18n()
-  const { language } = useI18n()
+  const { t, language } = useI18n();
 
-  const features = [
+  const features = useMemo(() => [
     {
-      icon: <Brain className="h-8 w-8" />,
-      title: t("features.aiEngine.title"),
-      description: t("features.aiEngine.description"),
+      icon: <Brain className="h-8 w-8" />, title: t("features.aiEngine.title"), description: t("features.aiEngine.description"),
     },
     {
-      icon: <Play className="h-8 w-8" />,
-      title: t("features.smartControls.title"),
-      description: t("features.smartControls.description"),
+      icon: <Play className="h-8 w-8" />, title: t("features.smartControls.title"), description: t("features.smartControls.description"),
     },
     {
-      icon: <Zap className="h-8 w-8" />,
-      title: t("features.realTimeViz.title"),
-      description: t("features.realTimeViz.description"),
+      icon: <Zap className="h-8 w-8" />, title: t("features.realTimeViz.title"), description: t("features.realTimeViz.description"),
     },
     {
-      icon: <Target className="h-8 w-8" />,
-      title: t("features.advancedConcepts.title"),
-      description: t("features.advancedConcepts.description"),
+      icon: <Target className="h-8 w-8" />, title: t("features.advancedConcepts.title"), description: t("features.advancedConcepts.description"),
     },
-  ]
+  ], [t]);
 
   const getSimulationConcepts = (key: string) => {
     const conceptsMap: Record<string, Record<string, string[]>> = {
@@ -62,51 +54,39 @@ export function LandingPageContent() {
         en: ["Wave Equation", "Interference", "Frequency"],
         id: ["Persamaan Gelombang", "Interferensi", "Frekuensi"],
       },
-    }
-    return conceptsMap[key]?.[language] || conceptsMap[key]?.en || []
-  }
+    };
+    return conceptsMap[key]?.[language] || conceptsMap[key]?.en || [];
+  };
 
-  const simulations = [
+  const simulations = useMemo(() => [
     {
-      name: t("examples.interactivePendulum.title"),
-      icon: "🎯",
-      concepts: getSimulationConcepts("interactivePendulum"),
+      name: t("examples.interactivePendulum.title"), icon: "🎯", concepts: getSimulationConcepts("interactivePendulum"),
     },
     {
-      name: t("examples.smartProjectile.title"),
-      icon: "🚀",
-      concepts: getSimulationConcepts("smartProjectile"),
+      name: t("examples.smartProjectile.title"), icon: "🚀", concepts: getSimulationConcepts("smartProjectile"),
     },
     {
-      name: t("examples.advancedSpring.title"),
-      icon: "🌊",
-      concepts: getSimulationConcepts("advancedSpring"),
+      name: t("examples.advancedSpring.title"), icon: "🌊", concepts: getSimulationConcepts("advancedSpring"),
     },
     {
-      name: t("examples.collisionEngine.title"),
-      icon: "💥",
-      concepts: getSimulationConcepts("collisionEngine"),
+      name: t("examples.collisionEngine.title"), icon: "💥", concepts: getSimulationConcepts("collisionEngine"),
     },
     {
-      name: t("examples.orbitalMechanics.title"),
-      icon: "🪐",
-      concepts: getSimulationConcepts("orbitalMechanics"),
+      name: t("examples.orbitalMechanics.title"), icon: "🪐", concepts: getSimulationConcepts("orbitalMechanics"),
     },
     {
-      name: t("examples.wavePhysics.title"),
-      icon: "〰️",
-      concepts: getSimulationConcepts("wavePhysics"),
+      name: t("examples.wavePhysics.title"), icon: "〰️", concepts: getSimulationConcepts("wavePhysics"),
     },
-  ]
+  ], [t, language]);
 
-  const benefits = [
+  const benefits = useMemo(() => [
     t("benefits.0"),
     t("benefits.1"),
     t("benefits.2"),
     t("benefits.3"),
     t("benefits.4"),
     t("benefits.5"),
-  ]
+  ], [t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
@@ -125,9 +105,6 @@ export function LandingPageContent() {
               </Link>
               <Link href="#simulations" className="text-gray-600 hover:text-[#7962A6] transition-colors">
                 {t("nav.simulations")}
-              </Link>
-              <Link href="#about" className="text-gray-600 hover:text-[#7962A6] transition-colors">
-                {t("nav.about")}
               </Link>
               <LanguageSwitcher />
               <Link href="/login">
@@ -163,14 +140,6 @@ export function LandingPageContent() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 py-4 border-2 border-[#A796CB] hover:border-[#7962A6] bg-transparent"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                {t("landing.watchDemo")}
-              </Button>
             </div>
           </div>
         </div>

@@ -20,15 +20,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supabase, setSupabase] = useState<any>(null)
 
-  // Initialize Supabase client with error handling
-  let supabase: any = null
-  try {
-    supabase = createClient()
-  } catch (err: any) {
-    setError(err.message)
-    setLoading(false)
-  }
+  // Initialize Supabase client with error handling in useEffect
+  useEffect(() => {
+    try {
+      const client = createClient()
+      setSupabase(client)
+    } catch (err: any) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!supabase) return
